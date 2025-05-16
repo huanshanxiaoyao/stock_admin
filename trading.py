@@ -2,8 +2,9 @@
 import streamlit as st
 import pandas as pd
 from trader import get_trades
+from common import get_xueqiu_link
 
-@st.cache_data(ttl=15)  # 15秒缓存，保证数据相对实时
+@st.cache_data(ttl=30)  # 15秒缓存，保证数据相对实时
 def get_current_trades(path, account_id):
     """获取今日成交"""
     # 直接调用trader.py中的通用函数
@@ -13,7 +14,7 @@ def get_current_trades(path, account_id):
 @st.cache_data(ttl=60)
 def get_potential_trades():
     """从日志文件中读取潜在交易机会"""
-    from realtime_qmtlog_trigger import read_qmt_log_signals
+    from qmtlog_helper import read_qmt_log_signals
     signals = read_qmt_log_signals()
         # 转换为DataFrame并返回
     signals_df = pd.DataFrame(signals)
@@ -45,7 +46,16 @@ def render_trading_view(path, account_id):
             st.toast("委托数据已刷新")
     
     orders_df = get_current_orders(path, account_id)
-    st.dataframe(orders_df, use_container_width=True)
+    
+    # 如果存在证券代码列，将其转换为可点击链接
+    if not orders_df.empty and '证券代码' in orders_df.columns:
+        display_df = orders_df.copy()
+        display_df['证券代码'] = orders_df['证券代码'].apply(
+            lambda x: f'<a href="{get_xueqiu_link(x)}" target="_blank">{x}</a>' if pd.notna(x) else ''
+        )
+        st.write(display_df.to_html(escape=False), unsafe_allow_html=True)
+    else:
+        st.dataframe(orders_df, use_container_width=True)
     
     # 添加分隔线
     st.divider()
@@ -59,7 +69,16 @@ def render_trading_view(path, account_id):
             st.toast("成交数据已刷新")
     
     trades_df = get_current_trades(path, account_id)
-    st.dataframe(trades_df, use_container_width=True)
+    
+    # 如果存在证券代码列，将其转换为可点击链接
+    if not trades_df.empty and '证券代码' in trades_df.columns:
+        display_df = trades_df.copy()
+        display_df['证券代码'] = trades_df['证券代码'].apply(
+            lambda x: f'<a href="{get_xueqiu_link(x)}" target="_blank">{x}</a>' if pd.notna(x) else ''
+        )
+        st.write(display_df.to_html(escape=False), unsafe_allow_html=True)
+    else:
+        st.dataframe(trades_df, use_container_width=True)
     
     # 添加分隔线
     st.divider()
@@ -73,17 +92,33 @@ def render_trading_view(path, account_id):
             st.toast("交易信号已刷新")
     
     signals_df = get_potential_trades()
-    st.dataframe(
-        signals_df,
-        use_container_width=True,
-        column_config={
-            "操作": st.column_config.CheckboxColumn(
-                "选择",
-                help="选择要执行的交易",
-                default=False
-            )
-        }
-    )
+    
+    # 如果存在证券代码列，将其转换为可点击链接
+    if not signals_df.empty and '证券代码' in signals_df.columns:
+        display_df = signals_df.copy()
+        display_df['证券代码'] = signals_df['证券代码'].apply(
+            lambda x: f'<a href="{get_xueqiu_link(x)}" target="_blank">{x}</a>' if pd.notna(x) else ''
+        )
+        st.write(display_df.to_html(escape=False), unsafe_allow_html=True)
+        
+        # 添加选择操作的功能
+        selected_signals = st.multiselect("选择要执行的交易", signals_df['证券代码'].tolist())
+        if selected_signals:
+            if st.button("执行选中的交易"):
+                st.write(f"将执行以下交易: {', '.join(selected_signals)}")
+                # 这里可以添加执行交易的逻辑
+    else:
+        st.dataframe(
+            signals_df,
+            use_container_width=True,
+            column_config={
+                "操作": st.column_config.CheckboxColumn(
+                    "选择",
+                    help="选择要执行的交易",
+                    default=False
+                )
+            }
+        )
     
     # 手动交易表单
     with st.expander("手动触发交易"):
@@ -110,7 +145,7 @@ def render_trading_view(path, account_id):
                     st.error(message)
 
 
-@st.cache_data(ttl=15)  # 15秒缓存，保证数据相对实时
+@st.cache_data(ttl=30)  # 15秒缓存，保证数据相对实时
 def get_current_orders(path, account_id):
     """获取当前委托订单"""
     from trader import get_orders

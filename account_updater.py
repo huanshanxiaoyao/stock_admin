@@ -69,7 +69,7 @@ def send_notification(subject, message):
 
 class AccountUpdater:
 
-    def __init__(self, path, account_id, data_dir="d:\\Users\\Jack\\xtquant\\account_data"):
+    def __init__(self, path, account_id, data_dir="d:\\Users\\Jack\\myqmt_admin\\data\\account"):
         self.path = path
         self.account_id = account_id
         self.session_id = int(time.time())

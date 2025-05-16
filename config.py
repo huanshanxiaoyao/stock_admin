@@ -15,10 +15,10 @@ PAGE_CONFIG = {
 
 # 链接配置
 LINKS = [
-    ("回测管理", "http://localhost:8501/backtest"),
-    ("日志查询", "http://localhost:8501/logs"),
-    ("策略配置", "http://localhost:8501/strategies"),
-    ("系统设置", "http://localhost:8501/settings"),
+    ("回测管理", "2_back_test"),
+    ("日志查询", "3_logs"),
+    ("策略配置", "1_strategies"),
+    ("系统设置", "4_setting"),
 ]
 
 # 版权信息

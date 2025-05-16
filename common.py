@@ -15,3 +15,24 @@ def run_script(path: str, shell_type="powershell"):
 def render_footer(text):
     """渲染页脚"""
     st.caption(text)
+
+
+def get_xueqiu_link(stock_code: str) -> str:
+    """
+    将股票代码转换为雪球网链接
+    
+    Args:
+        stock_code: str, 格式如 "835368.BJ" 或 "000001.SZ"
+        
+    Returns:
+        str: 雪球网链接，如 https://xueqiu.com/S/BJ835368
+    """
+    code, market = stock_code.split('.')
+    if market == 'BJ':
+        return f"https://xueqiu.com/S/BJ{code}"
+    elif market == 'SZ':
+        return f"https://xueqiu.com/S/SZ{code}"
+    elif market == 'SH':
+        return f"https://xueqiu.com/S/SH{code}"
+    else:
+        return f"https://xueqiu.com/S/{market}{code}"
